@@ -1,113 +1,71 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+import 'home_screen.dart';
 
-
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
-  final VoskFlutterPlugin _vosk = VoskFlutterPlugin.instance();
-  Model? _model;
-  Recognizer? _recognizer;
-  SpeechService? _speechService;
-  
-  bool _isListening = false;
-  String _recognizedText = "Tap the button and speak your emergency message...";
-
+class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    _initVosk();
-  }
 
-  Future<void> _initVosk() async {
-    // Load the offline model asset
-    final modelPath = await ModelLoader().loadFromAssets('assets/models/vosk-model-small-en-us-0.15');
-    _model = await _vosk.createModel(modelPath);
-    _recognizer = await _vosk.createRecognizer(
-      model: _model!,
-      sampleRate: 16000,
-    );
-    _speechService = await _vosk.initSpeechService(_recognizer!);
-  }
+    Future.delayed(const Duration(seconds: 5), () {
+      if (!mounted) return;
 
-  void _toggleListening() async {
-    if (_speechService == null) return;
-
-    if (_isListening) {
-      await _speechService!.stop();
-      setState(() => _isListening = false);
-      _saveTicketToHive(_recognizedText);
-    } else {
-      setState(() {
-        _isListening = true;
-        _recognizedText = "Listening...";
-      });
-
-      _speechService!.onPartial().listen((partial) {
-        // Updated partial text handling
-      });
-
-      _speechService!.onResult().listen((result) {
-        setState(() {
-          _recognizedText = result;
-        });
-      });
-
-      await _speechService!.start();
-    }
-  }
-
-  void _saveTicketToHive(String message) {
-    final box = Hive.box('rescue_tickets');
-    box.add({
-      'raw_text': message,
-      'timestamp': DateTime.now().toIso8601String(),
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => const HomeScreen(),
+        ),
+      );
     });
-    
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Rescue Ticket saved offline to Hive DB!')),
-    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("RescueLink - Voice Report")),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
+      backgroundColor: const Color.fromARGB(255, 255, 1, 1),
+      body: Center(
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Expanded(
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.grey[200],
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  _recognizedText,
-                  style: const TextStyle(fontSize: 18),
-                ),
+            Image.asset(
+              "assets/images/rescue_logo.png",
+              height: 240,
+              width: 240,
+              fit: BoxFit.contain,
+            ),
+
+            const SizedBox(height: 25),
+
+            const Text(
+              "RescueLink",
+              style: TextStyle(
+                fontSize: 34,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
               ),
             ),
-            const SizedBox(height: 20),
-            ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                backgroundColor: _isListening ? Colors.red : Colors.green,
+
+            const SizedBox(height: 10),
+
+            const Text(
+              "Offline Disaster Communication",
+              style: TextStyle(
+                fontSize: 18,
+                color: Colors.white70,
               ),
-              onPressed: _toggleListening,
-              icon: Icon(_isListening ? Icons.stop : Icons.mic, color: Colors.white),
-              label: Text(
-                _isListening ? "Stop & Save" : "Start Speaking",
-                style: const TextStyle(color: Colors.white, fontSize: 18),
-              ),
-            )
+            ),
+
+            const SizedBox(height: 40),
+
+            const CircularProgressIndicator(
+              color: Colors.white,
+            ),
           ],
         ),
       ),

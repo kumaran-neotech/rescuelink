@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:rescue_link/home_screen.dart';
+import 'splash_screen.dart';
+
 void main() {
-  WidgetsFlutterBinding.ensureInitialized();
-  runApp(const MyApp());
+  runApp(const MaterialApp(
+    debugShowCheckedModeBanner: false,
+    home: SplashScreen(),
+  ));
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class RescueLinkApp extends StatelessWidget {
+  const RescueLinkApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -15,8 +18,9 @@ class MyApp extends StatelessWidget {
       title: 'RescueLink',
       theme: ThemeData(
         primarySwatch: Colors.red,
+        scaffoldBackgroundColor: const Color(0xFFF4F7FC),
       ),
-    home: HomeScreen(),
+      home: const SplashScreen(),
     );
- }
+  }
 }
