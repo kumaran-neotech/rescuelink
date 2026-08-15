@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
+
+import 'home_screen.dart';
+import 'volunteer_screen.dart';
+import 'current_user.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -10,6 +15,14 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+
+  final loginEmailController = TextEditingController();
+final loginPasswordController = TextEditingController();
+
+final signupNameController = TextEditingController();
+final signupEmailController = TextEditingController();
+final signupPhoneController = TextEditingController();
+final signupPasswordController = TextEditingController();
 
   @override
   void initState() {
@@ -29,6 +42,112 @@ class _LoginScreenState extends State<LoginScreen>
       prefixIcon: Icon(icon),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
+      ),
+    );
+  }
+
+void signup() async {
+
+  final usersBox = Hive.box('users');
+
+  String email =
+      signupEmailController.text.trim();
+
+  if (!email.endsWith("@gmail.com")) {
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          "Only Gmail accounts allowed",
+        ),
+      ),
+    );
+
+    return;
+  }
+
+  await usersBox.put(
+    email,
+    {
+      "name": signupNameController.text,
+      "email": email,
+      "phone": signupPhoneController.text,
+      "password": signupPasswordController.text,
+      "role": "user",
+    },
+  );
+
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(
+      content: Text("Signup Successful"),
+    ),
+  );
+}
+void login() {
+
+  final usersBox = Hive.box('users');
+
+  String email =
+      loginEmailController.text.trim();
+
+  String password =
+      loginPasswordController.text.trim();
+
+  if (!usersBox.containsKey(email)) {
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("User Not Found"),
+      ),
+    );
+
+    return;
+  }
+
+  Map user =
+      Map.from(usersBox.get(email));
+
+  if (user["password"] != password) {
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("Wrong Password"),
+      ),
+    );
+
+    return;
+  }
+
+  CurrentUser.name = user["name"];
+  CurrentUser.email = user["email"];
+  CurrentUser.role = user["role"];
+
+  if (CurrentUser.role == "volunteer") {
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) =>
+            const VolunteerScreen(),
+      ),
+    );
+
+  } else {
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) =>
+            const HomeScreen(),
+      ),
+    );
+  }
+}
+  void goToHome() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const HomeScreen(),
       ),
     );
   }
@@ -94,22 +213,30 @@ class _LoginScreenState extends State<LoginScreen>
                 child: TabBarView(
                   controller: _tabController,
                   children: [
-
-                    /// LOGIN
+                    // LOGIN TAB
                     Padding(
                       padding: const EdgeInsets.only(top: 20),
                       child: Column(
                         children: [
                           TextField(
-                            decoration: inputDecoration(
-                                "Phone / Email", Icons.person),
-                          ),
+  controller: loginEmailController,
+  decoration: inputDecoration(
+    "Email",
+    Icons.person,
+  ),
+),
+
                           const SizedBox(height: 15),
+
                           TextField(
+                            controller: loginPasswordController,
                             obscureText: true,
                             decoration: inputDecoration(
-                                "Password", Icons.lock),
+                              "Password",
+                              Icons.lock,
+                            ),
                           ),
+
                           const SizedBox(height: 10),
 
                           Align(
@@ -129,9 +256,7 @@ class _LoginScreenState extends State<LoginScreen>
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.red,
                               ),
-                              onPressed: () {
-                                // Navigate to Home Screen
-                              },
+                              onPressed: login,
                               child: const Text(
                                 "LOGIN",
                                 style: TextStyle(fontSize: 18),
@@ -142,43 +267,57 @@ class _LoginScreenState extends State<LoginScreen>
                           const SizedBox(height: 15),
 
                           OutlinedButton(
-                            onPressed: () {
-                              // Guest Mode
-                            },
+                            onPressed: goToHome,
                             child: const Text("Continue as Guest"),
                           ),
                         ],
                       ),
                     ),
 
-                    /// SIGN UP
+                    // SIGNUP TAB
                     Padding(
                       padding: const EdgeInsets.only(top: 20),
                       child: Column(
                         children: [
                           TextField(
-                            decoration: inputDecoration(
-                                "Full Name", Icons.person),
+                           controller: signupNameController,
+                           decoration: inputDecoration(
+                           "Full Name",
+                              Icons.person,
+                            ),
                           ),
+
                           const SizedBox(height: 15),
 
                           TextField(
-                            decoration: inputDecoration(
-                                "Phone Number", Icons.phone),
+  controller: signupPhoneController,
+  decoration: inputDecoration(
+    "Phone Number",
+                              Icons.phone,
+                            ),
                           ),
+
+                          const SizedBox(height: 15),
+
+TextField(
+  controller: signupEmailController,
+  decoration: inputDecoration(
+    "Gmail",
+    Icons.email,
+  ),
+),
+
                           const SizedBox(height: 15),
 
                           TextField(
+  controller: signupPasswordController,
+  obscureText: true,
                             decoration: inputDecoration(
-                                "Emergency Contact", Icons.contact_phone),
+                              "Password",
+                              Icons.lock,
+                            ),
                           ),
-                          const SizedBox(height: 15),
 
-                          TextField(
-                            obscureText: true,
-                            decoration: inputDecoration(
-                                "Password", Icons.lock),
-                          ),
                           const SizedBox(height: 25),
 
                           SizedBox(
@@ -188,9 +327,7 @@ class _LoginScreenState extends State<LoginScreen>
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.red,
                               ),
-                              onPressed: () {
-                                // Register User
-                              },
+                              onPressed: signup,
                               child: const Text(
                                 "SIGN UP",
                                 style: TextStyle(fontSize: 18),

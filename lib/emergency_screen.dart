@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import '../models/rescue_ticket.dart';
+import '../storage_service.dart';
+import 'current_user.dart';
+
 
 class EmergencyScreen extends StatefulWidget {
   const EmergencyScreen({super.key});
@@ -10,14 +14,15 @@ class EmergencyScreen extends StatefulWidget {
 class _EmergencyScreenState extends State<EmergencyScreen> {
   bool sosSent = false;
 
-  // Dummy data (replace later with speech recognition + AI)
-  String recognizedText =
-      "I am trapped inside the school building with five people.";
+  final TextEditingController _messageController =
+      TextEditingController();
 
   String victims = "5";
   String location = "School Building";
   String emergency = "Building Collapse";
   String priority = "High";
+
+  String ticketId = "";
 
   @override
   Widget build(BuildContext context) {
@@ -39,10 +44,10 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
         child: Column(
           children: [
 
-            /// Microphone
+            /// Mic Button
             GestureDetector(
               onTap: () {
-                // Start Voice Recognition
+                // Voice recognition later
               },
               child: Container(
                 height: 120,
@@ -71,37 +76,21 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
 
             const SizedBox(height: 25),
 
-            /// Recognized Text
-            Card(
-              elevation: 3,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(15),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      "Recognized Text",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      recognizedText,
-                      style: const TextStyle(fontSize: 16),
-                    ),
-                  ],
+            /// User Message Input
+            TextField(
+              controller: _messageController,
+              maxLines: 5,
+              decoration: InputDecoration(
+                hintText: "Describe your emergency...",
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
               ),
             ),
 
             const SizedBox(height: 20),
 
-            /// AI Preview
+            /// AI Preview Card
             Card(
               elevation: 3,
               shape: RoundedRectangleBorder(
@@ -138,12 +127,10 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.red,
                   ),
-                  onPressed: () {
-                    setState(() {
-                      sosSent = true;
-                    });
-                  },
-                  icon: const Icon(Icons.send, color: Colors.white),
+                  icon: const Icon(
+                    Icons.send,
+                    color: Colors.white,
+                  ),
                   label: const Text(
                     "CONFIRM & SEND SOS",
                     style: TextStyle(
@@ -151,6 +138,48 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
                       color: Colors.white,
                     ),
                   ),
+                  onPressed: () async {
+
+                    if (_messageController.text.trim().isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            "Please enter emergency details",
+                          ),
+                        ),
+                      );
+                      return;
+                    }
+
+                    ticketId =
+                        DateTime.now().millisecondsSinceEpoch.toString();
+
+                    RescueTicket ticket = RescueTicket(
+                      id: ticketId,
+                      userName: CurrentUser.name, // temporary value
+                      userEmail: CurrentUser.email, 
+                      victims: int.parse(victims),
+                      location: location,
+                      priority: priority,
+                      status: "Pending",
+                      message: _messageController.text,
+                      timestamp: DateTime.now(),
+                    );
+
+                    await StorageService.saveTicket(ticket);
+
+                    setState(() {
+                      sosSent = true;
+                    });
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          "Emergency Ticket Saved",
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
 
@@ -166,17 +195,17 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
                 child: Padding(
                   padding: const EdgeInsets.all(20),
                   child: Column(
-                    children: const [
+                    children: [
 
-                      Icon(
+                      const Icon(
                         Icons.check_circle,
                         color: Colors.green,
                         size: 70,
                       ),
 
-                      SizedBox(height: 15),
+                      const SizedBox(height: 15),
 
-                      Text(
+                      const Text(
                         "SOS Sent Successfully",
                         style: TextStyle(
                           fontSize: 22,
@@ -185,18 +214,22 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
                         ),
                       ),
 
-                      SizedBox(height: 15),
+                      const SizedBox(height: 15),
 
                       Text(
-                        "Ticket ID: RL-1024",
-                        style: TextStyle(fontSize: 18),
+                        "Ticket ID: $ticketId",
+                        style: const TextStyle(
+                          fontSize: 18,
+                        ),
                       ),
 
-                      SizedBox(height: 10),
+                      const SizedBox(height: 10),
 
-                      Text(
+                      const Text(
                         "Status: Waiting for Rescue Team",
-                        style: TextStyle(fontSize: 18),
+                        style: TextStyle(
+                          fontSize: 18,
+                        ),
                       ),
                     ],
                   ),
@@ -211,7 +244,8 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
 
   Widget buildRow(String title, String value) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      mainAxisAlignment:
+          MainAxisAlignment.spaceBetween,
       children: [
         Text(
           title,
@@ -222,7 +256,9 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
         ),
         Text(
           value,
-          style: const TextStyle(fontSize: 17),
+          style: const TextStyle(
+            fontSize: 17,
+          ),
         ),
       ],
     );

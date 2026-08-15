@@ -3,6 +3,9 @@ import 'profile_screen.dart';
 import 'emergency_screen.dart';
 import 'request_safety_screen.dart';
 import 'setting_screen.dart';
+import 'my_requests_screen.dart';
+import 'volunteer_screen.dart';
+import 'current_user.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -28,11 +31,12 @@ class HomeScreen extends StatelessWidget {
             icon: const Icon(Icons.person, color: Colors.white),
            onPressed: () {
   Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (context) => const ProfileScreen(),
-    ),
-  );
+  context,
+  MaterialPageRoute(
+    builder: (context) =>
+        const MyRequestsScreen(),
+  ),
+);
 },
           ),
         ],
@@ -126,19 +130,19 @@ class HomeScreen extends StatelessWidget {
                   mainAxisSpacing: 18,
                   children: [
 
-                    _menuCard(
-                      Icons.assignment,
-                      "My Requests",
-                      Colors.orange,
-                      () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const RequestsSafetyScreen(),
-                            ),
-                          );
-                        },
-                    ),
+                  _menuCard(
+  Icons.assignment,
+  "My Requests",
+  Colors.orange,
+  () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const MyRequestsScreen(),
+      ),
+    );
+  },
+),
 
                     _menuCard(
                       Icons.shield,
@@ -168,19 +172,20 @@ class HomeScreen extends StatelessWidget {
                       },
                     ),
 
-                    _menuCard(
-                      Icons.settings_applications,
-                      "Settings",
-                      Colors.grey,
-                      () {
-                        Navigator.push(
-                       context,
-                        MaterialPageRoute(
-                          builder: (context) => const SettingsScreen(),
-                        ),
-                      );
-                    },
-                    ),
+  if (CurrentUser.role == "volunteer")
+  _menuCard(
+    Icons.volunteer_activism,
+    "Volunteer",
+    Colors.blue,
+    () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const VolunteerScreen(),
+        ),
+      );
+    },
+  ),
                   ],
                 ),
               ),
@@ -189,6 +194,7 @@ class HomeScreen extends StatelessWidget {
         ),
       ),
     );
+   
   }
 
   Widget _menuCard(
